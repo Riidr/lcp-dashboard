@@ -4,6 +4,20 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { LicenseReportDialog } from "@/components/dashboard/LicenseReportDialog";
 
+const monthOrder = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+const getMonthSortValue = (month: string): number | null => {
+  const normalized = month.trim();
+  if (normalized.length !== 3) {
+    return null;
+  }
+
+  const capitalized = normalized.charAt(0).toUpperCase() + normalized.slice(1).toLowerCase();
+  const monthIndex = monthOrder.indexOf(capitalized);
+
+  return monthIndex === -1 ? null : monthIndex + 1;
+};
+
 export function LicenseChart() {
   const { data: dashboardData, isLoading, error } = useDashboardData();
 
@@ -35,8 +49,25 @@ export function LicenseChart() {
       </Card>
     );
   }
+  const chartData = [...dashboardData.chart_data].sort((a, b) => {
+    const sortValueA = getMonthSortValue(a.month);
+    const sortValueB = getMonthSortValue(b.month);
 
-  const chartData = dashboardData.chart_data;
+    if (sortValueA !== null && sortValueB !== null) {
+      return sortValueA - sortValueB;
+    }
+
+    if (sortValueA !== null) {
+      return -1;
+    }
+
+    if (sortValueB !== null) {
+      return 1;
+    }
+
+    return a.month.localeCompare(b.month);
+  });
+
   return (
     <Card className="p-6 bg-gradient-card border-stat-border col-span-full">
       <div className="space-y-4">
